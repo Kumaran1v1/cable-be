@@ -22,6 +22,7 @@ app.get("/api/health", (_req, res) => {
 });
 // Main API Routes
 app.use("/api", routes_1.default);
+app.use("/api/api", routes_1.default); // Fallback for clients prefixing /api twice
 // Error Handling Middleware
 app.use(error_middleware_1.errorHandler);
 exports.default = app;
