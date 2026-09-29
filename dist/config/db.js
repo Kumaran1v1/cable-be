@@ -19,6 +19,7 @@ const connectDB = async () => {
     try {
         console.log("Connecting to MongoDB...");
         await mongoose_1.default.connect(mongoUri, {
+            family: 4, // Force IPv4 to prevent Node 24 OpenSSL IPv6 handshake failure
             serverSelectionTimeoutMS: 30000, // 30 seconds for Atlas server selection / DNS
             connectTimeoutMS: 30000, // 30 seconds initial connection timeout
             socketTimeoutMS: 45000, // 45 seconds socket timeout
