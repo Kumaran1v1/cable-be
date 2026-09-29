@@ -11,7 +11,11 @@ const error_middleware_1 = require("./middleware/error.middleware");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Middlewares
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express_1.default.json());
 // Health Check Endpoint
 app.get("/api/health", (_req, res) => {
