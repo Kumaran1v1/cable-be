@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const User_model_1 = __importDefault(require("../models/User.model"));
 const authMiddleware_1 = require("../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
@@ -80,6 +81,9 @@ router.post("/login", async (req, res, next) => {
                 mobile: user.mobile,
                 role: user.role,
                 companyName: user.companyName || "Cable Network",
+                age: user.age,
+                gender: user.gender,
+                profileImage: user.profileImage,
             },
         });
     }
@@ -102,13 +106,95 @@ router.get("/profile", authMiddleware_1.authenticateJWT, async (req, res, next) 
         }
         res.json({
             success: true,
-            user: {
+            data: {
                 id: user._id.toString(),
+                _id: user._id.toString(),
                 name: user.name,
                 email: user.email,
                 mobile: user.mobile,
                 role: user.role,
-                companyName: user.companyName,
+                companyName: user.companyName || "Cable Network",
+                age: user.age,
+                gender: user.gender,
+                profileImage: user.profileImage,
+            },
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/auth/profile
+router.put("/profile", authMiddleware_1.authenticateJWT, async (req, res, next) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ success: false, message: "Unauthorized" });
+            return;
+        }
+        const { name, email, mobile, companyName, age, gender, profileImage, password } = req.body || {};
+        const updateData = {};
+        if (name)
+            updateData.name = name.trim();
+        if (companyName)
+            updateData.companyName = companyName.trim();
+        if (gender !== undefined)
+            updateData.gender = gender;
+        if (profileImage !== undefined)
+            updateData.profileImage = profileImage;
+        if (age !== undefined && age !== "")
+            updateData.age = Number(age);
+        // Email uniqueness
+        if (email) {
+            const lowerEmail = email.toLowerCase().trim();
+            const existingEmail = await User_model_1.default.findOne({ email: lowerEmail, _id: { $ne: userId } });
+            if (existingEmail) {
+                res.status(400).json({ success: false, message: "Email is already in use by another account" });
+                return;
+            }
+            updateData.email = lowerEmail;
+        }
+        // Mobile uniqueness
+        if (mobile) {
+            const trimmedMobile = mobile.trim();
+            const existingMobile = await User_model_1.default.findOne({ mobile: trimmedMobile, _id: { $ne: userId } });
+            if (existingMobile) {
+                res.status(400).json({ success: false, message: "Mobile number is already in use by another account" });
+                return;
+            }
+            updateData.mobile = trimmedMobile;
+        }
+        // Password update
+        if (password) {
+            if (password.length < 6) {
+                res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+                return;
+            }
+            const salt = await bcryptjs_1.default.genSalt(10);
+            updateData.password = await bcryptjs_1.default.hash(password, salt);
+        }
+        const updatedUser = await User_model_1.default.findByIdAndUpdate(userId, updateData, {
+            new: true,
+            runValidators: true,
+        }).select("-password");
+        if (!updatedUser) {
+            res.status(404).json({ success: false, message: "User not found" });
+            return;
+        }
+        res.json({
+            success: true,
+            message: "Profile updated successfully",
+            data: {
+                id: updatedUser._id.toString(),
+                _id: updatedUser._id.toString(),
+                name: updatedUser.name,
+                email: updatedUser.email,
+                mobile: updatedUser.mobile,
+                role: updatedUser.role,
+                companyName: updatedUser.companyName || "Cable Network",
+                age: updatedUser.age,
+                gender: updatedUser.gender,
+                profileImage: updatedUser.profileImage,
             },
         });
     }

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { UserService } from "../services/user.service";
+import { AuthRequest } from "../types";
+import User from "../models/User.model";
 
 export class UserController {
   static async getAllUsers(_req: Request, res: Response, next: NextFunction) {
@@ -48,6 +50,47 @@ export class UserController {
         success: true,
         message: "User updated successfully",
         data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      let userId = req.user?.id;
+      if (!userId) {
+        const defaultUser = await User.findOne();
+        if (!defaultUser) {
+          return res.status(404).json({ success: false, message: "No user found" });
+        }
+        userId = defaultUser._id.toString();
+      }
+      const user = await UserService.getUserById(userId);
+      res.json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateProfile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      let userId = req.user?.id;
+      if (!userId) {
+        const defaultUser = await User.findOne();
+        if (!defaultUser) {
+          return res.status(404).json({ success: false, message: "No user found" });
+        }
+        userId = defaultUser._id.toString();
+      }
+      const updated = await UserService.updateProfile(userId, req.body);
+      res.json({
+        success: true,
+        message: "Profile updated successfully",
+        data: updated,
       });
     } catch (error) {
       next(error);

@@ -8,6 +8,9 @@ export interface IUser {
   email: string;
   mobile?: string;
   companyName?: string;
+  age?: number;
+  gender?: "male" | "female" | "other" | "";
+  profileImage?: string;
   password?: string;
   role: UserRole;
   isActive: boolean;

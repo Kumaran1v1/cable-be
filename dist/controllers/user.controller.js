@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const user_service_1 = require("../services/user.service");
+const User_model_1 = __importDefault(require("../models/User.model"));
 class UserController {
     static async getAllUsers(_req, res, next) {
         try {
@@ -49,6 +53,47 @@ class UserController {
                 success: true,
                 message: "User updated successfully",
                 data: user,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getProfile(req, res, next) {
+        try {
+            let userId = req.user?.id;
+            if (!userId) {
+                const defaultUser = await User_model_1.default.findOne();
+                if (!defaultUser) {
+                    return res.status(404).json({ success: false, message: "No user found" });
+                }
+                userId = defaultUser._id.toString();
+            }
+            const user = await user_service_1.UserService.getUserById(userId);
+            res.json({
+                success: true,
+                data: user,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async updateProfile(req, res, next) {
+        try {
+            let userId = req.user?.id;
+            if (!userId) {
+                const defaultUser = await User_model_1.default.findOne();
+                if (!defaultUser) {
+                    return res.status(404).json({ success: false, message: "No user found" });
+                }
+                userId = defaultUser._id.toString();
+            }
+            const updated = await user_service_1.UserService.updateProfile(userId, req.body);
+            res.json({
+                success: true,
+                message: "Profile updated successfully",
+                data: updated,
             });
         }
         catch (error) {

@@ -25,6 +25,20 @@ const userSchema = new Schema<IUserDocument>(
       default: "Cable Network",
       trim: true,
     },
+    age: {
+      type: Number,
+      min: [0, "Age cannot be negative"],
+      max: [120, "Age cannot exceed 120"],
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", ""],
+      default: "",
+    },
+    profileImage: {
+      type: String,
+      default: "",
+    },
     password: {
       type: String,
       required: [true, "Password is required"],

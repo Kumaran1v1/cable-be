@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const monthlyEntry_controller_1 = require("../controllers/monthlyEntry.controller");
+const router = (0, express_1.Router)();
+router.post("/", monthlyEntry_controller_1.MonthlyEntryController.saveMonthlyEntry);
+router.get("/customer/:customerId", monthlyEntry_controller_1.MonthlyEntryController.getCustomerEntries);
+router.get("/customer/:customerId/month/:month", monthlyEntry_controller_1.MonthlyEntryController.getSingleMonthEntry);
+router.delete("/:id", monthlyEntry_controller_1.MonthlyEntryController.deleteEntry);
+exports.default = router;

@@ -26,12 +26,22 @@ export class AuthService {
     };
   }
 
-  static async login(email: string, password?: string) {
-    if (!email || !password) {
-      throw new Error("Please provide email and password");
+  static async login(identifier: string, password?: string) {
+    if (!identifier || !password) {
+      throw new Error("Please provide email/mobile and password");
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const trimmed = identifier.trim();
+    const isEmail = trimmed.includes("@");
+    
+    // Find user by either email or mobile number
+    const user = await User.findOne({
+      $or: [
+        { email: trimmed.toLowerCase() },
+        { mobile: trimmed },
+      ],
+    }).select("+password");
+
     if (!user) {
       throw new Error("Invalid credentials");
     }
@@ -51,6 +61,11 @@ export class AuthService {
         _id: user._id,
         name: user.name,
         email: user.email,
+        mobile: user.mobile,
+        companyName: user.companyName || "Cable Network",
+        age: user.age,
+        gender: user.gender,
+        profileImage: user.profileImage,
         role: user.role,
       },
       token,

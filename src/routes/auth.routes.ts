@@ -90,6 +90,9 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
         mobile: user.mobile,
         role: user.role,
         companyName: user.companyName || "Cable Network",
+        age: user.age,
+        gender: user.gender,
+        profileImage: user.profileImage,
       },
     });
   } catch (err) {
@@ -117,16 +120,105 @@ router.get(
 
       res.json({
         success: true,
-        user: {
+        data: {
           id: user._id.toString(),
+          _id: user._id.toString(),
           name: user.name,
           email: user.email,
           mobile: user.mobile,
           role: user.role,
-          companyName: user.companyName,
+          companyName: user.companyName || "Cable Network",
+          age: user.age,
+          gender: user.gender,
+          profileImage: user.profileImage,
         },
       });
     } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// PUT /api/auth/profile
+router.put(
+  "/profile",
+  authenticateJWT,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: "Unauthorized" });
+        return;
+      }
+
+      const { name, email, mobile, companyName, age, gender, profileImage, password } = req.body || {};
+
+      const updateData: any = {};
+      if (name) updateData.name = name.trim();
+      if (companyName) updateData.companyName = companyName.trim();
+      if (gender !== undefined) updateData.gender = gender;
+      if (profileImage !== undefined) updateData.profileImage = profileImage;
+      if (age !== undefined && age !== "") updateData.age = Number(age);
+
+      // Email uniqueness
+      if (email) {
+        const lowerEmail = email.toLowerCase().trim();
+        const existingEmail = await User.findOne({ email: lowerEmail, _id: { $ne: userId } });
+        if (existingEmail) {
+          res.status(400).json({ success: false, message: "Email is already in use by another account" });
+          return;
+        }
+        updateData.email = lowerEmail;
+      }
+
+      // Mobile uniqueness
+      if (mobile) {
+        const trimmedMobile = mobile.trim();
+        const existingMobile = await User.findOne({ mobile: trimmedMobile, _id: { $ne: userId } });
+        if (existingMobile) {
+          res.status(400).json({ success: false, message: "Mobile number is already in use by another account" });
+          return;
+        }
+        updateData.mobile = trimmedMobile;
+      }
+
+      // Password update
+      if (password) {
+        if (password.length < 6) {
+          res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+          return;
+        }
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(password, salt);
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+        runValidators: true,
+      }).select("-password");
+
+      if (!updatedUser) {
+        res.status(404).json({ success: false, message: "User not found" });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: "Profile updated successfully",
+        data: {
+          id: updatedUser._id.toString(),
+          _id: updatedUser._id.toString(),
+          name: updatedUser.name,
+          email: updatedUser.email,
+          mobile: updatedUser.mobile,
+          role: updatedUser.role,
+          companyName: updatedUser.companyName || "Cable Network",
+          age: updatedUser.age,
+          gender: updatedUser.gender,
+          profileImage: updatedUser.profileImage,
+        },
+      });
+    } catch (err: any) {
       next(err);
     }
   }

@@ -5,15 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyToken = exports.generateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const JWT_SECRET = process.env.JWT_SECRET || "cable_default_secret_key_2026";
 const generateToken = (payload) => {
-    const secret = process.env.JWT_SECRET || "fallback_default_secret_key";
-    return jsonwebtoken_1.default.sign(payload, secret, {
+    return jsonwebtoken_1.default.sign(payload, JWT_SECRET, {
         expiresIn: "7d",
     });
 };
 exports.generateToken = generateToken;
 const verifyToken = (token) => {
-    const secret = process.env.JWT_SECRET || "fallback_default_secret_key";
-    return jsonwebtoken_1.default.verify(token, secret);
+    return jsonwebtoken_1.default.verify(token, JWT_SECRET);
 };
 exports.verifyToken = verifyToken;

@@ -27,11 +27,19 @@ class AuthService {
             token,
         };
     }
-    static async login(email, password) {
-        if (!email || !password) {
-            throw new Error("Please provide email and password");
+    static async login(identifier, password) {
+        if (!identifier || !password) {
+            throw new Error("Please provide email/mobile and password");
         }
-        const user = await User_model_1.default.findOne({ email }).select("+password");
+        const trimmed = identifier.trim();
+        const isEmail = trimmed.includes("@");
+        // Find user by either email or mobile number
+        const user = await User_model_1.default.findOne({
+            $or: [
+                { email: trimmed.toLowerCase() },
+                { mobile: trimmed },
+            ],
+        }).select("+password");
         if (!user) {
             throw new Error("Invalid credentials");
         }
@@ -48,6 +56,11 @@ class AuthService {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                mobile: user.mobile,
+                companyName: user.companyName || "Cable Network",
+                age: user.age,
+                gender: user.gender,
+                profileImage: user.profileImage,
                 role: user.role,
             },
             token,
