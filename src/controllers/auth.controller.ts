@@ -28,4 +28,18 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async logout(_req: Request, res: Response, next: NextFunction) {
+    try {
+      res.clearCookie("token");
+      res.clearCookie("jwt");
+      const result = await AuthService.logout();
+      res.json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

@@ -132,4 +132,34 @@ router.get(
   }
 );
 
+// POST /api/auth/logout
+router.post("/logout", async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.clearCookie("token");
+    res.clearCookie("jwt");
+
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/auth/logout (fallback support)
+router.get("/logout", async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.clearCookie("token");
+    res.clearCookie("jwt");
+
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

@@ -30,5 +30,19 @@ class AuthController {
             next(error);
         }
     }
+    static async logout(_req, res, next) {
+        try {
+            res.clearCookie("token");
+            res.clearCookie("jwt");
+            const result = await auth_service_1.AuthService.logout();
+            res.json({
+                success: true,
+                message: result.message,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.AuthController = AuthController;
